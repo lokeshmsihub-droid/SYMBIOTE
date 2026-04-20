@@ -37,11 +37,16 @@ const intelligence = [
   { name: 'AI Coach',  path: '/ai-coach',  icon: Bot },
 ];
 
+const admin = [
+  { name: 'Jira Admin', path: '/admin/jira', icon: Settings },
+];
+
 const sections = [
   { label: 'Main Menu',    items: mainMenu },
   { label: 'Explore',      items: explore },
   { label: 'Culture',      items: culture },
   { label: 'Intelligence', items: intelligence },
+  { label: 'Admin',        items: admin },
 ];
 
 const textCls = `inline-block max-w-0 opacity-0 pointer-events-none overflow-hidden whitespace-nowrap transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/sidebar:max-w-[200px] group-hover/sidebar:opacity-100 group-hover/sidebar:pointer-events-auto`;

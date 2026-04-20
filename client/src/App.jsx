@@ -16,6 +16,7 @@ import Mentorship from './pages/Mentorship';
 import Mystery from './pages/Mystery';
 import Story from './pages/Story';
 import Sergeants from './pages/Sergeants';
+import AdminJira from './pages/AdminJira';
 
 const ComingSoon = ({ label }) => (
   <div className="flex items-center justify-center h-[60vh]">
@@ -48,6 +49,7 @@ function App() {
         <Route path="story" element={<Story />} />
         <Route path="gamer-types" element={<ComingSoon label="Gamer Types" />} />
         <Route path="sergeants" element={<Sergeants />} />
+        <Route path="admin/jira" element={<AdminJira />} />
         <Route path="spine" element={<ComingSoon label="SPINE Wellbeing" />} />
         <Route path="ai-coach" element={<ComingSoon label="AI Coach" />} />
         <Route path="*" element={<ComingSoon label="Coming Soon" />} />

@@ -181,11 +181,39 @@ export default function Dashboard() {
     });
     const load = async () => {
       try {
-        const [dr, lr] = await Promise.all([api.get('/dashboard/3'), api.get('/leaderboard')]);
-        if (dr.data.success) setData({ ...dr.data.data, topPerformers: lr.data.leaderboard.slice(0, 4) });
-        else fallback();
-      } catch { fallback(); }
-      finally { setLoading(false); }
+        const [dr, lr] = await Promise.all([api.get('/dashboard'), api.get('/leaderboard')]);
+        const dashboard = dr.data || {};
+        const leaderboard = Array.isArray(lr.data) ? lr.data : [];
+        const stats = {
+          total_xp: dashboard.xp ?? 0,
+          current_level: dashboard.level ?? 0,
+          wallet_balance: dashboard.coins ?? 0,
+          streak: dashboard.streak ?? 0,
+        };
+        const topPerformers = leaderboard.slice(0, 4).map((entry) => ({
+          id: entry.userId,
+          name: entry.name,
+          total_xp: entry.xp,
+        }));
+        setData({
+          stats,
+          pendingTasks: [
+            { id: 101, title: 'Complete Code Review Sprint' },
+            { id: 102, title: 'Innovation Pitch Prep' },
+            { id: 103, title: 'Network Builder' },
+          ],
+          topPerformers: topPerformers.length ? topPerformers : [
+            { id: 1, name: 'Lokesh Kumar M S',  total_xp: 5120 },
+            { id: 2, name: 'Sriram R P',  total_xp: 4890 },
+            { id: 3, name: 'SriVishnu S',  total_xp: 4280 },
+            { id: 4, name: 'Vishnudharshan S', total_xp: 3950 }
+          ],
+        });
+      } catch {
+        fallback();
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);

@@ -18,27 +18,46 @@ export default function Streaks() {
     fetchStreakData();
   }, []);
 
-  const fetchStreakData = async () => {
-    try {
-      const response = await api.get(`/streak/status?userId=${userId}`);
-      if (response.data.success) {
-        setData(response.data.data);
+   const buildLogs = (currentStreak, lastActivityDate) => {
+      const logs = [];
+      const days = Math.max(0, Math.min(currentStreak || 0, 30));
+      const anchor = lastActivityDate ? new Date(lastActivityDate) : new Date();
+      for (let i = days - 1; i >= 0; i -= 1) {
+         const d = new Date(anchor);
+         d.setDate(d.getDate() - i);
+         logs.push({
+            date: d.toISOString().slice(0, 10),
+            status: 'completed',
+         });
       }
-    } catch (error) {
-      console.error('Fetch error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return logs;
+   };
 
-  const handleUseFreeze = async () => {
-    try {
-       const res = await api.post('/streak/use-freeze', { userId });
-       if (res.data.success) {
-         fetchStreakData();
-       }
-    } catch (e) { console.error(e); }
-  };
+   const fetchStreakData = async () => {
+      try {
+         const response = await api.get(`/streak/${userId}`);
+         const streak = response.data;
+         if (streak) {
+            setData({
+               user_id: streak.userId,
+               current_streak: streak.currentStreak,
+               longest_streak: streak.longestStreak,
+               logs: buildLogs(streak.currentStreak, streak.lastActivityDate),
+            });
+         }
+      } catch (error) {
+         console.error('Fetch error:', error);
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   const handleUseFreeze = async () => {
+      try {
+          await api.post(`/streak/update/${userId}`);
+          fetchStreakData();
+      } catch (e) { console.error(e); }
+   };
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">

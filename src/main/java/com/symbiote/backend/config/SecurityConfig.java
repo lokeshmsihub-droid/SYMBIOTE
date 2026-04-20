@@ -32,8 +32,20 @@ public class SecurityConfig {
             .cors(cors -> {})
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/dashboard").permitAll()
-                .requestMatchers("/api/users/**", "/api/streak/**", "/api/leaderboard/**").authenticated()
+                .requestMatchers(
+                        "/api/auth/**",
+                        "/api/dashboard",
+                        "/api/leaderboard/**",
+                        "/api/streak/**",
+                        "/api/events/**",
+                        "/api/user/**",
+                        "/api/rewards/**",
+                        "/api/achievements/**",
+                        "/api/analytics/**",
+                        "/api/jira/webhook"
+                ).permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").authenticated()
                 .anyRequest().permitAll()
             );
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

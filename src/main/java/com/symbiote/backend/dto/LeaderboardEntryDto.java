@@ -8,7 +8,7 @@ import lombok.Data;
 public class LeaderboardEntryDto {
     private Long userId;
     private String name;
-    private int xp;
+    private long xp;
     private int level;
     private int streak;
     private int rank;

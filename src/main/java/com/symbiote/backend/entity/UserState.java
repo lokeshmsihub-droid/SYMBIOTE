@@ -19,14 +19,26 @@ public class UserState {
     private Long userId;
 
     @Column(nullable = false)
-    private int xp;
+    private long xp;
 
     @Column(nullable = false)
-    private int coins;
+    private long coins;
 
     @Column(nullable = false)
     private int level;
 
     @Column(nullable = false)
-    private int score;
+    private int currentStreak;
+
+    @Column(nullable = false)
+    private int longestStreak;
+
+    @Column
+    private java.time.LocalDate lastActiveDate;
+
+    @Column(nullable = false)
+    private java.time.Instant updatedAt;
+
+    @Version
+    private Long version;
 }

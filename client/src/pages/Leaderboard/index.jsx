@@ -158,12 +158,46 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const normalize = (entry, index) => {
+      const xp = entry.xp ?? 0;
+      const level = entry.level ?? 0;
+      const streak = entry.streak ?? 0;
+      const quality = Math.min(100, Math.round(70 + level * 2));
+      const efficiency = Math.min(100, Math.round(60 + streak * 2));
+      const consistency = Math.min(100, Math.round(65 + streak * 1.5));
+      const history = Array.from({ length: 7 }, (_, i) => Math.max(0, xp - (6 - i) * 40));
+      return {
+        id: entry.userId ?? index + 1,
+        name: entry.name || `User ${index + 1}`,
+        role: 'Member',
+        current_level: level,
+        total_xp: xp,
+        change: 0,
+        streak,
+        team: 'Alpha',
+        quality,
+        efficiency,
+        consistency,
+        history,
+        risk: 'consistent',
+        badges: [],
+      };
+    };
+
     const load = async () => {
       try {
-        // Fallback to mock for demo consistency
+        const response = await api.get('/leaderboard');
+        const entries = Array.isArray(response.data) ? response.data : [];
+        if (entries.length) {
+          setUsers(entries.map(normalize));
+        } else {
+          setUsers(mockUsers);
+        }
+      } catch {
         setUsers(mockUsers);
-      } catch { setUsers(mockUsers); }
-      finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);

@@ -3,10 +3,8 @@ package com.symbiote.backend.service;
 import com.symbiote.backend.dto.LeaderboardEntryDto;
 import com.symbiote.backend.entity.User;
 import com.symbiote.backend.entity.UserState;
-import com.symbiote.backend.entity.UserStreak;
 import com.symbiote.backend.repository.UserRepository;
 import com.symbiote.backend.repository.UserStateRepository;
-import com.symbiote.backend.repository.UserStreakRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +16,6 @@ import java.util.stream.Collectors;
 public class LeaderboardService {
     private final UserRepository userRepository;
     private final UserStateRepository userStateRepository;
-    private final UserStreakRepository userStreakRepository;
 
     private List<LeaderboardEntryDto> buildLeaderboard(List<UserState> states, Optional<String> roleFilter, int limit) {
         List<LeaderboardEntryDto> entries = states.stream()
@@ -26,18 +23,17 @@ public class LeaderboardService {
                     User user = userRepository.findById(state.getUserId()).orElse(null);
                     if (user == null) return null;
                     if (roleFilter.isPresent() && !roleFilter.get().equalsIgnoreCase(user.getRole())) return null;
-                    UserStreak streak = userStreakRepository.findByUserId(state.getUserId()).orElse(null);
                     return new LeaderboardEntryDto(
                             user.getId(),
                             user.getName(),
                             state.getXp(),
                             state.getLevel(),
-                            streak != null ? streak.getCurrentStreak() : 0,
+                            state.getCurrentStreak(),
                             0 // rank placeholder
                     );
                 })
                 .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(LeaderboardEntryDto::getXp).reversed())
+                .sorted(Comparator.comparingLong(LeaderboardEntryDto::getXp).reversed())
                 .collect(Collectors.toList());
         // Assign ranks
         for (int i = 0; i < entries.size(); i++) {

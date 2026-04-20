@@ -34,6 +34,7 @@ public class UserService {
                 .id(dto.getId())
                 .name(dto.getName())
                 .email(dto.getEmail())
+                .password(dto.getPassword())
                 .role(dto.getRole())
                 .department(dto.getDepartment())
                 .status(dto.getStatus())
