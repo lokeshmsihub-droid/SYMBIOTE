@@ -1,0 +1,38 @@
+{
+  "successful": [
+    "Invalid API Token rejected",
+    "Invalid task rejected by Jira properly",
+    "Webhook endpoint accepted valid token payload",
+    "Webhook endpoints rejected invalid token",
+    "Duplicate event handled gracefully without crash",
+    "Task without assignee processed without crashing",
+    "Task status reopened processed",
+    "Nonexistent Jira API returns 404 gracefully"
+  ],
+  "failed": [
+    {
+      "name": "Valid API Token",
+      "reason": "Status 401"
+    },
+    {
+      "name": "Project Fetching",
+      "reason": "Project KAN not found directly"
+    },
+    {
+      "name": "User Fetching",
+      "reason": "Status 403"
+    },
+    {
+      "name": "Task Creation",
+      "reason": "Status 401 - {\"errorMessages\":[\"您无权在此项目中创建事务。\"],\"errors\":{}}"
+    },
+    {
+      "name": "Task Assignment",
+      "reason": "Pre-conditions not met (no issue or user)"
+    }
+  ],
+  "bugs": [],
+  "apiIssues": [],
+  "missingLogic": [],
+  "recommendations": []
+}

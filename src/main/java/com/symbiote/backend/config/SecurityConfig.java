@@ -42,7 +42,7 @@ public class SecurityConfig {
                         "/api/rewards/**",
                         "/api/achievements/**",
                         "/api/analytics/**",
-                        "/api/jira/webhook"
+                        "/api/jira/**"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").authenticated()

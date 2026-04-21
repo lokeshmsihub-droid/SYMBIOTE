@@ -3,12 +3,14 @@ package com.symbiote.backend.service;
 import com.symbiote.backend.dto.EventRequest;
 import com.symbiote.backend.entity.Event;
 import com.symbiote.backend.entity.UserState;
+import com.symbiote.backend.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 
 @Service
@@ -23,7 +25,7 @@ public class EventProcessingService {
     private final AnalyticsService analyticsService;
     private final LedgerTransactionRepositoryAdapter ledgerAdapter;
     private final LeaderboardUpdateService leaderboardUpdateService;
-    private final EventService eventService;
+    private final EventRepository eventRepository;
 
     @Transactional
     public void processEvent(Event event, EventRequest request) {
@@ -43,6 +45,9 @@ public class EventProcessingService {
         analyticsService.record(event, xp, coins);
         leaderboardUpdateService.update(event.getUserId(), updated.getXp());
 
-        eventService.markProcessed(event.getEventId());
+        eventRepository.findById(event.getEventId()).ifPresent(existing -> {
+            existing.setProcessedAt(Instant.now());
+            eventRepository.save(existing);
+        });
     }
 }

@@ -22,6 +22,9 @@ public class JiraWebhookController {
         String secret = jiraConfig.getWebhookSecret();
         if (secret != null && !secret.isBlank()) {
             String provided = request.getHeader("X-SYMBIOTE-SECRET");
+            if (provided == null || provided.isBlank()) {
+                provided = request.getParameter("token");
+            }
             if (!secret.equals(provided)) {
                 return ResponseEntity.status(401).body(new JiraWebhookResponse("UNAUTHORIZED"));
             }
