@@ -69,19 +69,14 @@ public class JiraOAuthController {
         }
 
         try {
-            JiraOAuthToken token = oAuthService.exchangeCodeForToken(code);
-            return ResponseEntity.ok(Map.of(
-                    "status", "connected",
-                    "cloudId", token.getCloudId(),
-                    "siteUrl", token.getSiteUrl(),
-                    "expiresIn", Duration.between(Instant.now(), token.getExpiryTime()).getSeconds()
-            ));
+            oAuthService.exchangeCodeForToken(code);
+            return ResponseEntity.status(302)
+                    .header("Location", "http://localhost:5173/admin/jira?oauth=success")
+                    .build();
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of(
-                    "status", "error",
-                    "code", "EXCHANGE_FAILURE",
-                    "message", e.getMessage()
-            ));
+            return ResponseEntity.status(302)
+                    .header("Location", "http://localhost:5173/admin/jira?oauth=error&message=" + e.getMessage())
+                    .build();
         }
     }
 }

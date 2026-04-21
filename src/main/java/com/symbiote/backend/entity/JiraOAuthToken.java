@@ -18,10 +18,10 @@ public class JiraOAuthToken {
     @Column(nullable = false, unique = true)
     private String environment; // e.g. "DEFAULT_WORKSPACE"
 
-    @Column(length = 2048, nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String accessToken;
 
-    @Column(length = 2048, nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String refreshToken;
 
     @Column(nullable = false)
