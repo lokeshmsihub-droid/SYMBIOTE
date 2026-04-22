@@ -42,7 +42,8 @@ public class SecurityConfig {
                         "/api/rewards/**",
                         "/api/achievements/**",
                         "/api/analytics/**",
-                        "/api/jira/**"
+                        "/api/jira/**",
+                        "/api/admin/jira/**"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").authenticated()
