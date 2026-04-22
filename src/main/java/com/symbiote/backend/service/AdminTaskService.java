@@ -19,23 +19,18 @@ import java.util.UUID;
 public class AdminTaskService {
     private static final Logger log = LoggerFactory.getLogger(AdminTaskService.class);
 
-    private final JiraService jiraService;
+    private final JiraAdapterService jiraAdapterService;
     private final JiraUserMappingService mappingService;
     private final TaskRepository taskRepository;
 
     @Transactional
     public Task createTask(AdminTaskRequest request) {
         JiraUserMapping mapping = mappingService.getOrThrowBySymbioteUser(request.getAssigneeUserId());
-        String issueKey = jiraService.createIssue(request.getTitle(), request.getDescription(), request.getPriority(), request.getStoryPoints());
+        // Assume default project key for now, or fetch from config if available.
+        String projectKey = "KAN"; 
+        String issueKey = jiraAdapterService.createIssue(projectKey, request.getTitle(), request.getDescription(), mapping.getJiraAccountId(), request.getPriority());
 
         String status = "CREATED";
-        try {
-            jiraService.assignUser(issueKey, mapping.getJiraAccountId());
-            jiraService.addToSprint(issueKey, request.getSprintId());
-        } catch (Exception ex) {
-            log.error("Jira post-create operations failed for {}: {}", issueKey, ex.getMessage());
-            status = "JIRA_PARTIAL";
-        }
 
         Task task = Task.builder()
                 .taskId(UUID.randomUUID())

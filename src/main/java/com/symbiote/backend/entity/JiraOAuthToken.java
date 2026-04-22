@@ -7,9 +7,28 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "jira_oauth_tokens")
-@Getter
-@Setter
 public class JiraOAuthToken {
+
+    public JiraOAuthToken() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getEnvironment() { return environment; }
+    public void setEnvironment(String environment) { this.environment = environment; }
+    public String getAccessToken() { return accessToken; }
+    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+    public String getRefreshToken() { return refreshToken; }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    public String getCloudId() { return cloudId; }
+    public void setCloudId(String cloudId) { this.cloudId = cloudId; }
+    public String getSiteUrl() { return siteUrl; }
+    public void setSiteUrl(String siteUrl) { this.siteUrl = siteUrl; }
+    public Instant getExpiryTime() { return expiryTime; }
+    public void setExpiryTime(Instant expiryTime) { this.expiryTime = expiryTime; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

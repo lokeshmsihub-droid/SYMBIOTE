@@ -43,7 +43,10 @@ public class SecurityConfig {
                         "/api/achievements/**",
                         "/api/analytics/**",
                         "/api/jira/**",
-                        "/api/admin/jira/**"
+                        "/api/admin/jira/**",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui.html"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").authenticated()

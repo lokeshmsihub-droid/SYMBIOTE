@@ -24,13 +24,13 @@ public class AdminJiraController {
         return ResponseEntity.ok(adminJiraService.getProjects());
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<Object> getUsers() {
-        return ResponseEntity.ok(adminJiraService.getUsers());
+    @GetMapping("/users/{projectKey}")
+    public ResponseEntity<Object> getUsers(@PathVariable String projectKey) {
+        return ResponseEntity.ok(adminJiraService.getUsers(projectKey));
     }
 
-    @PostMapping("/tasks")
-    public ResponseEntity<Object> createTask(@RequestBody Map<String, Object> payload) {
-        return ResponseEntity.ok(adminJiraService.createTask(payload));
+    @PostMapping("/tasks/{projectKey}")
+    public ResponseEntity<Object> createTask(@PathVariable String projectKey, @RequestBody Map<String, Object> payload) {
+        return ResponseEntity.ok(adminJiraService.createTask(projectKey, payload));
     }
 }

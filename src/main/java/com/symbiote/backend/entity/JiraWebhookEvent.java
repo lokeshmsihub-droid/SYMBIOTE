@@ -2,32 +2,41 @@ package com.symbiote.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "jira_webhook_event", indexes = {
-        @Index(name = "idx_jira_webhook_idem", columnList = "idempotencyKey", unique = true)
+@Table(name = "jira_webhook_events", indexes = {
+    @Index(name = "idx_webhook_idempotency", columnList = "idempotencyKey")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class JiraWebhookEvent {
+
     @Id
-    @Column(nullable = false, updatable = false)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 128)
-    private String idempotencyKey;
+    @Column(nullable = false, unique = true)
+    private String idempotencyKey; // issueId + transitionId or timestamp
 
     @Column(nullable = false)
-    private String issueKey;
+    private String status; // PENDING, SUCCESS, FAILED
 
-    @Column(nullable = false)
-    private String eventType;
+    private Integer retryCount;
+
+    @Column(columnDefinition = "TEXT")
+    private String payload;
 
     @Column(nullable = false)
     private Instant receivedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (id == null) id = UUID.randomUUID();
+        if (receivedAt == null) receivedAt = Instant.now();
+        if (retryCount == null) retryCount = 0;
+    }
 }

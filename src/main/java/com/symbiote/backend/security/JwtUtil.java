@@ -47,4 +47,19 @@ public class JwtUtil {
         return (String) Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().get("name");
     }
+
+    public String generateStateToken(Long userId) {
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 600000)) // 10 minutes
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public Long getUserIdFromStateToken(String token) {
+        String subject = Jwts.parserBuilder().setSigningKey(key).build()
+                .parseClaimsJws(token).getBody().getSubject();
+        return Long.parseLong(subject);
+    }
 }

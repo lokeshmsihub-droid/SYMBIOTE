@@ -56,4 +56,13 @@ public class LeaderboardService {
     public List<LeaderboardEntryDto> getByRole(String role) {
         return buildLeaderboard(userStateRepository.findAll(), Optional.of(role), 0);
     }
+
+    public int getUserRank(Long userId) {
+        List<LeaderboardEntryDto> fullBoard = getLeaderboard();
+        return fullBoard.stream()
+                .filter(e -> e.getUserId().equals(userId))
+                .findFirst()
+                .map(LeaderboardEntryDto::getRank)
+                .orElse(0);
+    }
 }

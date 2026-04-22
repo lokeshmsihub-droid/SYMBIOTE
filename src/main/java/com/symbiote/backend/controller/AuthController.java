@@ -14,11 +14,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -28,26 +31,44 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserDTO userDTO) {
+        log.info("Registration attempt for email: {}", userDTO.getEmail());
+        if (userDTO.getEmail() == null || userDTO.getPassword() == null) {
+            return ResponseEntity.badRequest().body("Email and password are required");
+        }
         if (userRepository.existsByEmail(userDTO.getEmail())) {
+            log.warn("Registration failed - Email already exists: {}", userDTO.getEmail());
             return ResponseEntity.badRequest().body("Email already exists");
         }
         userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         userDTO.setStatus("ACTIVE");
         UserDTO created = userService.createUser(userDTO);
+        log.info("User registered successfully: {}", created.getEmail());
         return ResponseEntity.ok(created);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        log.info("Login attempt for email: {}", request.getEmail());
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
-            User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found after authentication"));
+            
             String token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getName());
+            log.info("Login successful for user: {}", user.getEmail());
             return ResponseEntity.ok(new LoginResponse(token, user.getName(), user.getRole()));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            log.warn("Login failed for email: {} - {}", request.getEmail(), e.getMessage());
+            return ResponseEntity.status(401).body("Invalid email or password");
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getMe() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow();
+        return ResponseEntity.ok(userService.toDTO(user));
     }
 }
