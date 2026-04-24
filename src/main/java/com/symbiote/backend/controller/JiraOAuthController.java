@@ -1,11 +1,12 @@
 package com.symbiote.backend.controller;
 
+import com.symbiote.backend.config.JiraConfig;
+import com.symbiote.backend.config.SymbioteAppConfig;
 import com.symbiote.backend.entity.User;
 import com.symbiote.backend.repository.UserRepository;
 import com.symbiote.backend.security.JwtUtil;
 import com.symbiote.backend.service.JiraOAuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -23,12 +24,8 @@ public class JiraOAuthController {
     private final JiraOAuthService jiraOAuthService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-
-    @Value("${JIRA_CLIENT_ID:}")
-    private String clientId;
-
-    @Value("${JIRA_REDIRECT_URI:http://localhost:8080/api/jira/oauth/callback}")
-    private String redirectUri;
+    private final JiraConfig jiraConfig;
+    private final SymbioteAppConfig appConfig;
 
     @GetMapping("/authorize-url")
     public ResponseEntity<Map<String, String>> getAuthorizeUrl() {
@@ -54,10 +51,11 @@ public class JiraOAuthController {
     private String buildAuthUrl(String state) {
         String scopes = "read:jira-work read:jira-user offline_access";
         return String.format(
-                "https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=%s&scope=%s&redirect_uri=%s&state=%s&response_type=code&prompt=consent",
-                clientId,
+                "%s/authorize?audience=api.atlassian.com&client_id=%s&scope=%s&redirect_uri=%s&state=%s&response_type=code&prompt=consent",
+                jiraConfig.getAuthUrl(),
+                jiraConfig.getClientId(),
                 URLEncoder.encode(scopes, StandardCharsets.UTF_8),
-                URLEncoder.encode(redirectUri, StandardCharsets.UTF_8),
+                URLEncoder.encode(jiraConfig.getRedirectUri(), StandardCharsets.UTF_8),
                 state
         );
     }
@@ -70,7 +68,7 @@ public class JiraOAuthController {
         jiraOAuthService.exchangeCodeForUserToken(userId, code);
         
         // Redirect back to frontend dashboard
-        return new RedirectView("http://localhost:5173/dashboard");
+        return new RedirectView(appConfig.getFrontendUrl() + "/dashboard");
     }
 
     @GetMapping("/status")

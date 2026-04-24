@@ -1,12 +1,12 @@
 package com.symbiote.backend.service;
 
+import com.symbiote.backend.config.JiraConfig;
 import com.symbiote.backend.entity.JiraUserConnection;
 import com.symbiote.backend.repository.JiraUserConnectionRepository;
 import com.symbiote.backend.security.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -25,12 +25,7 @@ public class JiraUserAdapterService {
 
     private static final Logger log = LoggerFactory.getLogger(JiraUserAdapterService.class);
 
-    @Value("${JIRA_CLIENT_ID:}")
-    private String clientId;
-
-    @Value("${JIRA_CLIENT_SECRET:}")
-    private String clientSecret;
-
+    private final JiraConfig jiraConfig;
     private final JiraUserConnectionRepository connectionRepository;
     private final EncryptionUtil encryptionUtil;
     
@@ -43,7 +38,7 @@ public class JiraUserAdapterService {
         JiraUserConnection connection = refreshIfNeeded(userId);
         
         String jql = "assignee = currentUser() ORDER BY updated DESC";
-        String url = "https://api.atlassian.com/ex/jira/" + connection.getCloudId() + 
+        String url = jiraConfig.getApiBaseUrl() + "/ex/jira/" + connection.getCloudId() + 
                      "/rest/api/3/search?jql=" + java.net.URLEncoder.encode(jql, java.nio.charset.StandardCharsets.UTF_8);
 
         HttpHeaders headers = new HttpHeaders();
@@ -67,11 +62,11 @@ public class JiraUserAdapterService {
         if (connection.getExpiryTime().isBefore(LocalDateTime.now().plusMinutes(5))) {
             log.info("Refreshing Jira token for user {}", userId);
             
-            String tokenUrl = "https://auth.atlassian.com/oauth/token";
+            String tokenUrl = jiraConfig.getAuthUrl() + "/oauth/token";
             Map<String, String> body = Map.of(
                     "grant_type", "refresh_token",
-                    "client_id", clientId,
-                    "client_secret", clientSecret,
+                    "client_id", jiraConfig.getClientId(),
+                    "client_secret", jiraConfig.getClientSecret(),
                     "refresh_token", encryptionUtil.decrypt(connection.getRefreshToken())
             );
 

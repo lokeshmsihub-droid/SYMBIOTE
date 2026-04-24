@@ -2,6 +2,7 @@ package com.symbiote.backend.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -9,9 +10,12 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private final String jwtSecret = "symbioteSuperSecretKeyForJwtTokenGeneration12345";
+    private final Key key;
     private final long jwtExpirationMs = 86400000; // 1 day
-    private final Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+
+    public JwtUtil(@Value("${symbiote.security.jwt-secret}") String jwtSecret) {
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
 
     public String generateToken(String email, String role, String name) {
         return Jwts.builder()

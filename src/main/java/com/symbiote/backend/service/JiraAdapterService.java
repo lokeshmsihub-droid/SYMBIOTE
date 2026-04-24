@@ -1,5 +1,6 @@
 package com.symbiote.backend.service;
 
+import com.symbiote.backend.config.JiraConfig;
 import com.symbiote.backend.entity.JiraOAuthToken;
 import com.symbiote.backend.repository.JiraOAuthTokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class JiraAdapterService {
 
     private final JiraOAuthService jiraOAuthService;
     private final JiraOAuthTokenRepository tokenRepository;
+    private final JiraConfig jiraConfig;
     private final RestTemplate restTemplate = new RestTemplateBuilder()
             .setConnectTimeout(Duration.ofSeconds(5))
             .setReadTimeout(Duration.ofSeconds(10))
@@ -75,7 +77,7 @@ public class JiraAdapterService {
     private String getBaseUrl() {
         JiraOAuthToken token = tokenRepository.findByEnvironment("DEFAULT_WORKSPACE")
                 .orElseThrow(() -> new IllegalStateException("Jira not connected"));
-        return "https://api.atlassian.com/ex/jira/" + token.getCloudId();
+        return jiraConfig.getApiBaseUrl() + "/ex/jira/" + token.getCloudId();
     }
 
     private <T> ResponseEntity<T> exchange(String url, HttpMethod method, Object payload, Class<T> responseType) {

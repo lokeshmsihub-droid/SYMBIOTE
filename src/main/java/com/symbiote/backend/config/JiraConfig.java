@@ -11,5 +11,11 @@ public class JiraConfig {
     private String apiToken;
     private String projectKey;
     private String webhookSecret;
-    private String storyPointsField = "customfield_10016"; // configurable
+    private String storyPointsField = "customfield_10016";
+    private String authUrl;
+    private String apiBaseUrl;
+    private String redirectUri;
+    private String webhookBaseUrl;
+    private String clientId;
+    private String clientSecret;
 }

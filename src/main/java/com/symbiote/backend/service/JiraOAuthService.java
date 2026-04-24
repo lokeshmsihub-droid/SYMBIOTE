@@ -1,5 +1,6 @@
 package com.symbiote.backend.service;
 
+import com.symbiote.backend.config.JiraConfig;
 import com.symbiote.backend.entity.JiraUserConnection;
 import com.symbiote.backend.entity.JiraOAuthToken;
 import com.symbiote.backend.repository.JiraOAuthTokenRepository;
@@ -8,7 +9,6 @@ import com.symbiote.backend.security.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -28,15 +28,7 @@ public class JiraOAuthService {
 
     private static final Logger log = LoggerFactory.getLogger(JiraOAuthService.class);
     
-    @Value("${JIRA_CLIENT_ID:}")
-    private String clientId;
-    
-    @Value("${JIRA_CLIENT_SECRET:}")
-    private String clientSecret;
-    
-    @Value("${JIRA_REDIRECT_URI:http://localhost:8080/api/jira/oauth/callback}")
-    private String redirectUri;
-
+    private final JiraConfig jiraConfig;
     private final JiraUserConnectionRepository connectionRepository;
     private final JiraOAuthTokenRepository tokenRepository;
     private final EncryptionUtil encryptionUtil;
@@ -64,12 +56,12 @@ public class JiraOAuthService {
 
     @Transactional
     public JiraOAuthToken refreshWorkspaceToken(JiraOAuthToken token) {
-        String tokenUrl = "https://auth.atlassian.com/oauth/token";
+        String tokenUrl = jiraConfig.getAuthUrl() + "/oauth/token";
 
         Map<String, String> body = Map.of(
                 "grant_type", "refresh_token",
-                "client_id", clientId,
-                "client_secret", clientSecret,
+                "client_id", jiraConfig.getClientId(),
+                "client_secret", jiraConfig.getClientSecret(),
                 "refresh_token", token.getRefreshToken()
         );
 
@@ -103,14 +95,14 @@ public class JiraOAuthService {
 
     @Transactional
     public void exchangeCodeForUserToken(Long userId, String code) {
-        String tokenUrl = "https://auth.atlassian.com/oauth/token";
+        String tokenUrl = jiraConfig.getAuthUrl() + "/oauth/token";
 
         Map<String, String> body = Map.of(
                 "grant_type", "authorization_code",
-                "client_id", clientId,
-                "client_secret", clientSecret,
+                "client_id", jiraConfig.getClientId(),
+                "client_secret", jiraConfig.getClientSecret(),
                 "code", code,
-                "redirect_uri", redirectUri
+                "redirect_uri", jiraConfig.getRedirectUri()
         );
 
         try {
@@ -175,7 +167,7 @@ public class JiraOAuthService {
     }
 
     private Map<String, String> fetchAccessibleSite(String accessToken) {
-        String url = "https://api.atlassian.com/oauth/token/accessible-resources";
+        String url = jiraConfig.getApiBaseUrl() + "/oauth/token/accessible-resources";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         
@@ -192,7 +184,7 @@ public class JiraOAuthService {
     }
 
     private Map<String, String> fetchJiraProfile(String accessToken, String cloudId) {
-        String url = "https://api.atlassian.com/ex/jira/" + cloudId + "/rest/api/3/myself";
+        String url = jiraConfig.getApiBaseUrl() + "/ex/jira/" + cloudId + "/rest/api/3/myself";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         

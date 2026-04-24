@@ -16,7 +16,7 @@ public class EncryptionUtil {
     private static final int IV_LENGTH_BYTE = 12;
     private final String key;
 
-    public EncryptionUtil(@Value("${TOKEN_ENCRYPTION_KEY}") String key) {
+    public EncryptionUtil(@Value("${symbiote.security.token-encryption-key}") String key) {
         this.key = key;
     }
 

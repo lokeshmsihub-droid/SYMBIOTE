@@ -1,5 +1,6 @@
 package com.symbiote.backend.service;
 
+import com.symbiote.backend.config.JiraConfig;
 import com.symbiote.backend.entity.JiraUserConnection;
 import com.symbiote.backend.entity.JiraOAuthToken;
 import com.symbiote.backend.repository.JiraOAuthTokenRepository;
@@ -7,7 +8,6 @@ import com.symbiote.backend.repository.JiraUserConnectionRepository;
 import com.symbiote.backend.security.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -29,14 +29,9 @@ public class JiraTokenManager {
     private final JiraOAuthTokenRepository tokenRepository;
     private final EncryptionUtil encryptionUtil;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final JiraConfig jiraConfig;
 
     private final Map<String, ReentrantLock> locks = new ConcurrentHashMap<>();
-
-    @Value("${JIRA_CLIENT_ID:}")
-    private String clientId;
-
-    @Value("${JIRA_CLIENT_SECRET:}")
-    private String clientSecret;
 
     public String getValidUserToken(Long userId) {
         ReentrantLock lock = locks.computeIfAbsent("USER_" + userId, k -> new ReentrantLock());
@@ -108,11 +103,11 @@ public class JiraTokenManager {
     }
 
     private Map<String, Object> callRefreshEndpoint(String refreshToken) {
-        String url = "https://auth.atlassian.com/oauth/token";
+        String url = jiraConfig.getAuthUrl() + "/oauth/token";
         Map<String, String> body = Map.of(
                 "grant_type", "refresh_token",
-                "client_id", clientId,
-                "client_secret", clientSecret,
+                "client_id", jiraConfig.getClientId(),
+                "client_secret", jiraConfig.getClientSecret(),
                 "refresh_token", refreshToken
         );
 
