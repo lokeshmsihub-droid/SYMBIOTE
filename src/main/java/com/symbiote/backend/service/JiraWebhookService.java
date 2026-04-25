@@ -83,10 +83,14 @@ public class JiraWebhookService {
     private void processUserXp(User user, String status, JiraWebhookEvent event) {
         int points = calculateXp(status);
         if (points != 0) {
-            user.setLifetimeXp(user.getLifetimeXp() + points);
-            user.setWeeklyXp(user.getWeeklyXp() + (points > 0 ? points : 0)); // Weekly XP usually doesn't go below 0
-            userRepository.save(user);
-            log.info("Awarded {} XP to user {} for status {}. New Total: {}", points, user.getEmail(), status, user.getLifetimeXp());
+            // CRIT-6: Re-fetch with pessimistic lock to prevent lost updates
+            // from concurrent webhooks for the same user
+            User lockedUser = userRepository.findByIdForUpdate(user.getId())
+                    .orElse(user);
+            lockedUser.setLifetimeXp(lockedUser.getLifetimeXp() + points);
+            lockedUser.setWeeklyXp(lockedUser.getWeeklyXp() + (points > 0 ? points : 0));
+            userRepository.save(lockedUser);
+            log.info("Awarded {} XP to user {} for status {}. New Total: {}", points, lockedUser.getEmail(), status, lockedUser.getLifetimeXp());
         }
         event.setStatus("SUCCESS");
     }

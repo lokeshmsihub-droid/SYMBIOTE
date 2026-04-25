@@ -41,6 +41,7 @@ public class JiraOAuthService {
     /**
      * Legacy workspace-level Jira OAuth token used by admin Jira features.
      * This is separate from per-user Jira connections stored in JiraUserConnection.
+     * Tokens are stored encrypted using EncryptionUtil.
      */
     @Transactional
     public synchronized String getValidAccessToken() {
@@ -49,9 +50,11 @@ public class JiraOAuthService {
 
         Instant expiresAt = token.getExpiryTime();
         if (expiresAt == null || expiresAt.isBefore(Instant.now().plus(Duration.ofMinutes(5)))) {
-            return refreshWorkspaceToken(token).getAccessToken();
+            refreshWorkspaceToken(token);
+            token = tokenRepository.findByEnvironment("DEFAULT_WORKSPACE")
+                    .orElseThrow();
         }
-        return token.getAccessToken();
+        return encryptionUtil.decrypt(token.getAccessToken());
     }
 
     @Transactional
@@ -80,9 +83,10 @@ public class JiraOAuthService {
             String refreshToken = (String) responseBody.get("refresh_token");
             Integer expiresIn = (Integer) responseBody.get("expires_in");
 
-            token.setAccessToken(accessToken);
+            // CRIT-4: Encrypt admin tokens before storage (matches user token pattern)
+            token.setAccessToken(encryptionUtil.encrypt(accessToken));
             if (refreshToken != null && !refreshToken.isBlank()) {
-                token.setRefreshToken(refreshToken);
+                token.setRefreshToken(encryptionUtil.encrypt(refreshToken));
             }
             token.setExpiryTime(Instant.now().plusSeconds(expiresIn != null ? expiresIn : 3600));
 
@@ -106,7 +110,9 @@ public class JiraOAuthService {
         );
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, body, Map.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, new HttpEntity<>(body, headers), Map.class);
             Map<?, ?> responseBody = response.getBody();
             
             if (responseBody == null || !responseBody.containsKey("access_token")) {

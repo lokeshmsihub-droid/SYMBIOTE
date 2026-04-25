@@ -7,6 +7,7 @@ import com.symbiote.backend.entity.User;
 import com.symbiote.backend.repository.UserRepository;
 import com.symbiote.backend.security.JwtUtil;
 import com.symbiote.backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,7 +48,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login attempt for email: {}", request.getEmail());
         try {
             Authentication authentication = authenticationManager.authenticate(

@@ -59,7 +59,8 @@ public class JiraTokenManager {
             if (isExpired(token.getExpiryTime())) {
                 refreshAdminToken(token);
             }
-            return token.getAccessToken();
+            // CRIT-4: Admin tokens are now stored encrypted — decrypt before use
+            return encryptionUtil.decrypt(token.getAccessToken());
         } finally {
             lock.unlock();
         }
@@ -90,12 +91,15 @@ public class JiraTokenManager {
 
     private void refreshAdminToken(JiraOAuthToken token) {
         log.info("Refreshing admin Jira token");
-        Map<String, Object> response = callRefreshEndpoint(token.getRefreshToken());
+        // CRIT-4: Decrypt refresh token before sending to Atlassian
+        String decryptedRefresh = encryptionUtil.decrypt(token.getRefreshToken());
+        Map<String, Object> response = callRefreshEndpoint(decryptedRefresh);
         
-        token.setAccessToken((String) response.get("access_token"));
+        // CRIT-4: Encrypt tokens before storage
+        token.setAccessToken(encryptionUtil.encrypt((String) response.get("access_token")));
         String newRefresh = (String) response.get("refresh_token");
         if (newRefresh != null) {
-            token.setRefreshToken(newRefresh);
+            token.setRefreshToken(encryptionUtil.encrypt(newRefresh));
         }
         Integer expiresIn = (Integer) response.get("expires_in");
         token.setExpiryTime(Instant.now().plusSeconds(expiresIn != null ? expiresIn : 3600));
