@@ -1,5 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Layout from './layouts/Layout';
 
@@ -8,8 +8,9 @@ import Login from './pages/Auth/LoginPage';
 import Register from './pages/Auth/RegisterPage';
 import NotFound from './pages/NotFound';
 
-// User & Admin Pages
-import Dashboard from './pages/Dashboard';
+// Core Application Pages
+import UserDashboard from './pages/Dashboard/UserDashboard';
+import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import Challenges from './pages/Challenges';
 import Leaderboard from './pages/Leaderboard';
 import Achievements from './pages/Achievements';
@@ -29,6 +30,14 @@ import Sergeants from './pages/Sergeants';
 import Analytics from './pages/Analytics';
 import AdminJira from './pages/AdminJira';
 
+const RootRedirector = () => {
+  const { hasCapability, loading } = useAuth();
+  if (loading) return null; // Let the global router loader handle it
+  return hasCapability('view_admin_dashboard') 
+    ? <Navigate to="/admin/dashboard" replace /> 
+    : <Navigate to="/dashboard" replace />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -40,9 +49,19 @@ function App() {
         {/* Global Protected App Shell */}
         <Route element={<ProtectedRoute allowedRoles={['USER', 'ADMIN']} />}>
           <Route element={<Layout />}>
-            {/* Index / Home */}
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            {/* Intelligent Root Routing */}
+            <Route index element={<RootRedirector />} />
+            
+            {/* Explicit Dashboards */}
+            <Route path="dashboard" element={<UserDashboard />} />
+            <Route 
+               path="admin/dashboard" 
+               element={
+                 <ProtectedRoute allowedRoles={['ADMIN']}>
+                   <AdminDashboard />
+                 </ProtectedRoute>
+               } 
+            />
             
             {/* Core User Experience */}
             <Route path="challenges" element={<Challenges />} />

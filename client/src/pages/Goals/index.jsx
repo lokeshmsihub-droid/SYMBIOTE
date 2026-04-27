@@ -9,40 +9,32 @@ export default function Goals() {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      try {
-        const response = await api.get('/tasks', { params: { userId: 3 } });
-        if (response.data.success) {
-          setTasks(response.data.tasks);
-        } else {
-          loadFallbackTasks();
-        }
-      } catch (err) {
-        console.warn('API unavailable, loading dummy test values for Goals:', err);
+      const { success, data } = await api.get('/tasks', { params: { userId: 3 } });
+      if (success && data?.success) {
+        setTasks(data.tasks);
+      } else {
+        console.warn('API unavailable, loading dummy test values for Goals');
         loadFallbackTasks();
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
-    
+
     const loadFallbackTasks = () => {
-        setTasks([
-          { id: 101, title: 'Complete Backend Integration', description: 'Finish API setup' },
-          { id: 102, title: 'Review Schema Logs', description: 'Check database health' },
-          { id: 103, title: 'Design Frontend Mockups', description: 'Update Figma' },
-          { id: 104, title: 'Onboard New Employees', description: 'Complete HR sync' }
-        ]);
+      setTasks([
+        { id: 101, title: 'Complete Backend Integration', description: 'Finish API setup' },
+        { id: 102, title: 'Review Schema Logs', description: 'Check database health' },
+        { id: 103, title: 'Design Frontend Mockups', description: 'Update Figma' },
+        { id: 104, title: 'Onboard New Employees', description: 'Complete HR sync' }
+      ]);
     };
-    
+
     fetchTasks();
   }, []);
 
   const handleComplete = async (taskId) => {
-    try {
-      await api.post('/task/complete', { taskId, userId: 3 });
-      // Remove it from frontend view immediately
+    const { success } = await api.post('/task/complete', { taskId, userId: 3 });
+    if (success) {
       setTasks(tasks.filter(t => t.id !== taskId));
-    } catch (err) {
-      console.error(err);
     }
   };
 

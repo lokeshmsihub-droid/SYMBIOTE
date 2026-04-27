@@ -39,6 +39,7 @@ const intelligence = [
 ];
 
 const admin = [
+  { name: 'System Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Jira Admin', path: '/admin/jira', icon: Settings },
 ];
 
@@ -79,11 +80,11 @@ function NavItem({ item }) {
 }
 
 export default function Sidebar() {
-  const { user, logout } = useAuth();
+  const { logout, hasCapability } = useAuth();
 
   const filteredSections = sections.filter(section => {
-    if (section.label === 'Admin') return user?.role === 'ADMIN';
-    if (section.label === 'Intelligence') return user?.role === 'ADMIN';
+    if (section.label === 'Admin') return hasCapability('view_admin_dashboard');
+    if (section.label === 'Intelligence') return hasCapability('view_analytics');
     return true;
   });
 

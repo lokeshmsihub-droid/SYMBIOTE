@@ -34,29 +34,23 @@ export default function Streaks() {
    };
 
    const fetchStreakData = async () => {
-      try {
-         const response = await api.get(`/streak/${userId}`);
-         const streak = response.data;
-         if (streak) {
-            setData({
-               user_id: streak.userId,
-               current_streak: streak.currentStreak,
-               longest_streak: streak.longestStreak,
-               logs: buildLogs(streak.currentStreak, streak.lastActivityDate),
-            });
-         }
-      } catch (error) {
-         console.error('Fetch error:', error);
-      } finally {
-         setLoading(false);
+      const { success, data: streak } = await api.get(`/streak/${userId}`);
+      if (success && streak) {
+         setData({
+            user_id: streak.userId,
+            current_streak: streak.currentStreak,
+            longest_streak: streak.longestStreak,
+            logs: buildLogs(streak.currentStreak, streak.lastActivityDate),
+         });
       }
+      setLoading(false);
    };
 
    const handleUseFreeze = async () => {
-      try {
-          await api.post(`/streak/update/${userId}`);
+      const { success } = await api.post(`/streak/update/${userId}`);
+      if (success) {
           fetchStreakData();
-      } catch (e) { console.error(e); }
+      }
    };
 
   if (loading) return (

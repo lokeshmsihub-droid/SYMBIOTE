@@ -14,6 +14,7 @@ export default function AdminJira() {
   // Form State
   const [form, setForm] = useState({ title: '', projectKey: '', assigneeId: '' });
   const [submitStatus, setSubmitStatus] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const [mappings, setMappings] = useState({ loading: false, data: [] });
   const [unmapped, setUnmapped] = useState({ loading: false, data: [] });
@@ -21,82 +22,67 @@ export default function AdminJira() {
   const [manualMapping, setManualMapping] = useState({ userId: '', jiraAccountId: '', displayName: '' });
 
   const fetchStatus = async () => {
-    try {
-      const { data } = await api.get('/admin/jira/status');
+    const { success, data } = await api.get('/admin/jira/status');
+    if (success) {
       setStatus({ loading: false, data });
-    } catch {
+    } else {
       setStatus({ loading: false, data: { connected: false } });
     }
   };
 
   const fetchMappings = async () => {
     setMappings(m => ({ ...m, loading: true }));
-    try {
-      const { data } = await api.get('/admin/mappings');
-      setMappings({ loading: false, data });
-    } catch {
-      setMappings({ loading: false, data: [] });
-    }
+    const { success, data } = await api.get('/admin/mappings');
+    setMappings({ loading: false, data: success ? data : [] });
   };
 
   const fetchUnmapped = async () => {
     setUnmapped(u => ({ ...u, loading: true }));
-    try {
-      const { data } = await api.get('/admin/mappings/unmapped');
-      setUnmapped({ loading: false, data });
-    } catch {
-      setUnmapped({ loading: false, data: [] });
-    }
+    const { success, data } = await api.get('/admin/mappings/unmapped');
+    setUnmapped({ loading: false, data: success ? data : [] });
   };
 
   const onSaveMapping = async () => {
-    try {
-      await api.post('/admin/mappings', manualMapping);
+    const { success, error } = await api.post('/admin/mappings', manualMapping);
+    if (success) {
       alert("Identity Resolved & Mapped Successfully!");
       fetchMappings();
       setSelectedMappingUser(null);
-    } catch (err) {
-      alert("Failed to execute mapping");
+    } else {
+      alert(error?.message || "Failed to execute mapping");
     }
   };
 
   const fetchProjects = async () => {
     setProjects(p => ({ ...p, loading: true }));
-    try {
-      const { data } = await api.get('/admin/jira/projects');
-      setProjects({ loading: false, data: Array.isArray(data) ? data : [] });
-    } catch {
-      setProjects({ loading: false, data: [] });
-    }
+    const { success, data } = await api.get('/admin/jira/projects');
+    setProjects({ loading: false, data: (success && Array.isArray(data)) ? data : [] });
   };
 
   const fetchUsers = async () => {
     setUsers(u => ({ ...u, loading: true }));
-    try {
-      const { data } = await api.get('/admin/jira/users');
-      setUsers({ loading: false, data: Array.isArray(data) ? data : [] });
-    } catch {
-      setUsers({ loading: false, data: [] });
-    }
+    const { success, data } = await api.get('/admin/jira/users');
+    setUsers({ loading: false, data: (success && Array.isArray(data)) ? data : [] });
   };
 
   const onSubmitTask = async (e) => {
     e.preventDefault();
-    try {
-      setSubmitStatus('Submitting...');
-      await api.post('/admin/jira/tasks', {
-        fields: {
-          project: { key: form.projectKey },
-          summary: form.title,
-          description: "Gamified task via SYMBIOTE",
-          issuetype: { name: "Task" },
-          assignee: form.assigneeId ? { accountId: form.assigneeId } : null
-        }
-      });
+    setSubmitStatus('Submitting...');
+    const { success, error } = await api.post('/admin/jira/tasks', {
+      fields: {
+        project: { key: form.projectKey },
+        summary: form.title,
+        description: "Gamified task via SYMBIOTE",
+        issuetype: { name: "Task" },
+        assignee: form.assigneeId ? { accountId: form.assigneeId } : null
+      }
+    });
+
+    if (success) {
       setSubmitStatus('Task Created Successfully!');
       setForm({ title: '', projectKey: '', assigneeId: '' });
-    } catch (err) {
-      setSubmitStatus('Failed: ' + (err?.response?.data?.message || 'Check Jira permissions'));
+    } else {
+      setSubmitStatus('Failed: ' + (error?.message || 'Check Jira permissions'));
     }
   };
 
@@ -125,22 +111,18 @@ export default function AdminJira() {
 
   const fetchXpRules = async () => {
     setXpRules(r => ({ ...r, loading: true }));
-    try {
-      const { data } = await api.get('/admin/xp-rules');
-      setXpRules({ loading: false, data });
-    } catch {
-      setXpRules({ loading: false, data: [] });
-    }
+    const { success, data } = await api.get('/admin/xp-rules');
+    setXpRules({ loading: false, data: success ? data : [] });
   };
 
   const updateXpRule = async (id, points) => {
-    try {
-      await api.put(`/admin/xp-rules/${id}`, { points: parseInt(points) });
+    const { success, error } = await api.put(`/admin/xp-rules/${id}`, { points: parseInt(points) });
+    if (success) {
       fetchXpRules();
-    } catch (err) {
-      alert("Failed to update rule");
+    } else {
+      alert(error?.message || "Failed to update rule");
     }
-  }
+  };
 
   useEffect(() => {
     if (activeTab === 'xp-rules' && !xpRules.data.length && status.data?.connected) fetchXpRules();
@@ -211,16 +193,24 @@ export default function AdminJira() {
                   <p className="text-gray-400 text-sm mb-6">Authenticate via Atlassian to grant access.</p>
                   <button 
                     onClick={async () => {
+                      setIsConnecting(true);
                       try {
-                        const { data } = await api.get('/jira/oauth/authorize-url');
-                        window.location.href = data.url;
+                        const { success, data, error } = await api.get('/jira/oauth/authorize-url');
+                        if (success && data?.url) {
+                          window.location.href = data.url;
+                        } else {
+                          alert(error?.message || 'Failed to generate Jira Auth URL');
+                        }
                       } catch (err) {
-                        alert('Could not generate Jira Auth URL');
+                        alert('A platform error occurred. Check browser console.');
+                      } finally {
+                        setIsConnecting(false);
                       }
                     }}
-                    className="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold transition inline-block"
+                    disabled={isConnecting}
+                    className={`bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold transition inline-block ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Connect to Jira
+                    {isConnecting ? 'Connecting...' : 'Connect to Jira'}
                   </button>
                 </div>
               )}

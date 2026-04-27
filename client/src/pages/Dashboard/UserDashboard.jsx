@@ -139,20 +139,22 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [jiraStatus, setJiraStatus] = useState({ connected: false });
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statsData, tasksData, lbData, jiraData] = await Promise.all([
-          apiClient('/users/me/stats'),
-          apiClient('/tasks/my').catch(() => []),
-          apiClient('/leaderboard/top10'),
-          apiClient('/jira/oauth/status').catch(() => ({ connected: false }))
+        const [statsRes, tasksRes, lbRes, jiraRes] = await Promise.all([
+          apiClient.get('/users/me/stats'),
+          apiClient.get('/tasks/my'),
+          apiClient.get('/leaderboard/top10'),
+          apiClient.get('/jira/oauth/status')
         ]);
-        setStats(statsData);
-        setTasks(Array.isArray(tasksData) ? tasksData : []);
-        setLeaderboard(lbData);
-        setJiraStatus(jiraData);
+        
+        if (statsRes.success) setStats(statsRes.data);
+        if (tasksRes.success) setTasks(Array.isArray(tasksRes.data) ? tasksRes.data : []);
+        if (lbRes.success) setLeaderboard(lbRes.data);
+        if (jiraRes.success) setJiraStatus(jiraRes.data);
       } catch (err) {
         console.error('Failed to fetch dashboard data', err);
       } finally {
@@ -163,21 +165,31 @@ export default function Dashboard() {
   }, []);
 
   const handleConnectJira = async () => {
+    setIsConnecting(true);
     try {
-      const { url } = await apiClient('/jira/oauth/authorize-url');
-      window.location.href = url;
+      const { success, data, error } = await apiClient.get('/jira/oauth/authorize-url');
+      if (success && data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert(error?.message || 'Could not connect to Jira. Please try again.');
+      }
     } catch (err) {
-      console.error('Failed to get Jira Auth URL:', err);
-      alert('Could not connect to Jira. Please try again.');
+      alert('A system error occurred. Please refresh.');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   const handleDisconnectJira = async () => {
     if (!confirm('Are you sure you want to disconnect your Jira account?')) return;
     try {
-      await apiClient('/jira/oauth/disconnect', { method: 'DELETE' });
-      setJiraStatus({ connected: false });
-      setTasks([]);
+      const { success } = await apiClient.delete('/jira/oauth/disconnect');
+      if (success) {
+        setJiraStatus({ connected: false });
+        setTasks([]);
+      } else {
+        alert('Failed to disconnect. Please try again.');
+      }
     } catch (err) {
       console.error('Failed to disconnect Jira:', err);
     }
@@ -237,10 +249,11 @@ export default function Dashboard() {
             ) : (
               <button 
                 onClick={handleConnectJira}
-                className="h-12 px-6 bg-violet-600 hover:bg-violet-500 text-white text-sm font-black rounded-2xl transition-all shadow-lg shadow-violet-600/20 flex items-center justify-center gap-2"
+                disabled={isConnecting}
+                className={`h-12 px-6 bg-violet-600 hover:bg-violet-500 text-white text-sm font-black rounded-2xl transition-all shadow-lg shadow-violet-600/20 flex items-center justify-center gap-2 ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Link2 className="w-4 h-4" />
-                Connect Jira
+                {isConnecting ? 'Connecting...' : 'Connect Jira'}
               </button>
             )}
           </div>

@@ -27,15 +27,14 @@ const RegisterPage = () => {
     setIsSuccess(false);
     setIsSubmitting(true);
 
-    try {
-      await register(formData);
+    const result = await register(formData);
+    if (result?.success) {
       setIsSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
-    } catch (err) {
-      setError(err.message || 'Registration failed');
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setError(result?.error?.message || 'Registration failed');
     }
+    setIsSubmitting(false);
   };
 
   const handleChange = (e) => {

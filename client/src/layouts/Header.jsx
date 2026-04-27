@@ -11,6 +11,7 @@ export default function Header() {
     const routeMap = {
       '/': 'Command Center',
       '/dashboard': 'Command Center',
+      '/admin/dashboard': 'System Control',
       '/challenges': 'Mission Intel',
       '/leaderboard': 'Global Rankings',
       '/achievements': 'Trophies & Badges',
@@ -52,7 +53,14 @@ export default function Header() {
         {/* User Profile */}
         <div className="flex items-center gap-4 pl-6 border-l border-white/5">
            <div className="text-right hidden sm:block">
-              <p className="text-sm font-black text-white leading-none">{user?.name}</p>
+              <p className="text-sm font-black text-white leading-none flex items-center gap-2 justify-end">
+                 {user?.name}
+                 {user?.role === 'ADMIN' && (
+                    <span className="bg-rose-500/20 text-rose-500 border border-rose-500/30 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-widest leading-none shadow-[0_0_10px_rgba(244,63,94,0.3)]">
+                       Administrator
+                    </span>
+                 )}
+              </p>
               <p className="text-[10px] font-bold text-violet-500 uppercase tracking-tighter mt-1">{user?.role}</p>
            </div>
            

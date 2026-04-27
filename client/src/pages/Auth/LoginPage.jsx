@@ -18,14 +18,13 @@ const LoginPage = () => {
     setError('');
     setIsSubmitting(true);
 
-    try {
-      await login(email, password);
+    const result = await login(email, password);
+    if (result?.success) {
       navigate('/');
-    } catch (err) {
-      setError(err.message || 'Invalid email or password');
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setError(result?.error?.message || 'Invalid email or password');
     }
+    setIsSubmitting(false);
   };
 
   return (
