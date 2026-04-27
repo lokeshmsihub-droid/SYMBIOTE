@@ -37,3 +37,7 @@ build/
 node_modules/
 deploy/node_modules/
 supabase/.temp/
+.gradle/
+build/
+out/
+.DS_Store

@@ -3,7 +3,7 @@ FROM eclipse-temurin:17-jdk-focal AS builder
 WORKDIR /app
 
 # Optimize Gradle Memory for Cloud Build (Limit to 384MB)
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs='-Xmx384m'"
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs='-Xmx448m'"
 
 # Copy full environment for build safety
 COPY . .
