@@ -39,7 +39,7 @@ public class JiraUserAdapterService {
         
         String jql = "assignee = currentUser() ORDER BY updated DESC";
         String url = jiraConfig.getApiBaseUrl() + "/ex/jira/" + connection.getCloudId() + 
-                     "/rest/api/3/search?jql=" + java.net.URLEncoder.encode(jql, java.nio.charset.StandardCharsets.UTF_8);
+                     "/rest/api/3/search/jql?jql=" + java.net.URLEncoder.encode(jql, java.nio.charset.StandardCharsets.UTF_8);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(encryptionUtil.decrypt(connection.getAccessToken()));

@@ -68,7 +68,7 @@ public class JiraAdapterService {
 
     public List<Map<String, Object>> getIssuesByAssignee(String accountId, String projectKey) {
         String jql = String.format("assignee = '%s' AND project = '%s' ORDER BY updated DESC", accountId, projectKey);
-        String url = getBaseUrl() + "/rest/api/3/search?jql=" + java.net.URLEncoder.encode(jql, java.nio.charset.StandardCharsets.UTF_8);
+        String url = getBaseUrl() + "/rest/api/3/search/jql?jql=" + java.net.URLEncoder.encode(jql, java.nio.charset.StandardCharsets.UTF_8);
         
         ResponseEntity<Map> response = exchange(url, HttpMethod.GET, null, Map.class);
         return (List<Map<String, Object>>) response.getBody().get("issues");
