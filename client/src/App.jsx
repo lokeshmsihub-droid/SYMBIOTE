@@ -42,6 +42,7 @@ function App() {
           <Route element={<Layout />}>
             {/* Index / Home */}
             <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
             
             {/* Core User Experience */}
             <Route path="challenges" element={<Challenges />} />

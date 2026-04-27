@@ -1,13 +1,40 @@
 import { Bell, Search, LogOut, User as UserIcon } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const location = useLocation();
+
+  // Dynamic Title Logic
+  const getTitle = (path) => {
+    const routeMap = {
+      '/': 'Command Center',
+      '/dashboard': 'Command Center',
+      '/challenges': 'Mission Intel',
+      '/leaderboard': 'Global Rankings',
+      '/achievements': 'Trophies & Badges',
+      '/streaks': 'Consistency Pulse',
+      '/rewards': 'Marketplace',
+      '/wallet': 'Internal Assets',
+      '/community': 'Squad Hub',
+      '/mentorship': 'Mentorship Nodes',
+      '/analytics': 'Predictive Analytics',
+      '/admin/jira': 'System Integration',
+      '/mystery': 'The Void / Mystery',
+      '/story': 'Campaign Chapters',
+      '/goals': 'Behavior Tracking',
+      '/wellness': 'SPINE Wellbeing',
+      '/accountability': 'Trust Network',
+      '/sergeants': "Sergeant's Corner"
+    };
+    return routeMap[path] || 'Intelligence Node';
+  };
 
   return (
     <header className="h-20 bg-[#030303] border-b border-white/5 flex items-center justify-between px-8 shrink-0 z-10 shadow-2xl">
       <div className="flex flex-col">
-        <h1 className="text-xl font-black text-white tracking-tight">Intelligence Dashboard</h1>
+        <h1 className="text-xl font-black text-white tracking-tight uppercase italic">{getTitle(location.pathname)}</h1>
         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Secure Session Active</p>
       </div>
 

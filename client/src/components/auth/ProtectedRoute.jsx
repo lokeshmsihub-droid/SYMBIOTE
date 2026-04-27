@@ -20,8 +20,12 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+  // Normalize roles for robust comparison
+  const userRole = user.role?.toUpperCase();
+  const requiredRoles = allowedRoles.map(r => r.toUpperCase());
+
+  if (requiredRoles.length > 0 && !requiredRoles.includes(userRole)) {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
